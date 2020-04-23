@@ -15,16 +15,16 @@ public class MenuPanel extends JPanel {
     private String [] binaryConditionKinds = { "Periodyczne", "Absorbujące"};
     private JComboBox comboBoxBinaryConditionsKinds = new JComboBox(binaryConditionKinds);
 
-    private JLabel labelWidth = new JLabel("Podaj wysokość:");
+    private JLabel labelWidth = new JLabel("Podaj szerokosc:");
     private JTextField textFieldWidth = new JTextField("100");
 
-    private JLabel labelHeight = new JLabel("Podaj szerokość:");
+    private JLabel labelHeight = new JLabel("Podaj wysokosc:");
     private JTextField textFieldHeight = new JTextField("100");
 
-    private JLabel labelAmountWidth = new JLabel("Podaj ilość w kolumnie:");
+    private JLabel labelAmountWidth = new JLabel("Ilość kolumn:");
     private JTextField textFieldAmountWidth = new JTextField("10");
 
-    private JLabel labelAmountHeight = new JLabel("Podaj ilość w wierszu:");
+    private JLabel labelAmountHeight = new JLabel("Ilość wierszy");
     private JTextField textFieldAmountHeight = new JTextField("10");
 
     private JLabel labelAmountGerms = new JLabel("Podaj ilość zarodków:");

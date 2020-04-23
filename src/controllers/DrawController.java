@@ -2,24 +2,47 @@ package controllers;
 
 import gui.DrawPanel;
 import tools.BoardCell;
+import tools.Cell;
 
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.geom.Rectangle2D;
-import java.util.LinkedList;
 import java.util.List;
 
 public class DrawController {
     private DrawPanel drawPanel;
+    private Graphics2D g2d;
+    private MenuController menuController;
     private BoardCell boardCell;
     private int drawPanelWidth;
     private int drawPanelHeight;
-    private int size = 0;
-    private MenuController menuController;
+    private int cellSize = 0;
+    private int rowsSize = 0;
+    private int colsSize = 0;
     private int radian = 0;
-    private List<List<Rectangle2D>> board = new LinkedList<>();
+    private MouseListener mouseListener = new MouseAdapter() {
+        @Override
+        public void mousePressed(MouseEvent e) {
+            super.mousePressed(e);
+            Graphics2D g2d = (Graphics2D) drawPanel.getGraphics();
+            Color color = changeColor();
+            g2d.setPaint(color);
+            int xClick = e.getX();
+            int yClick = e.getY();
+            if(xClick/cellSize < rowsSize && yClick/cellSize < colsSize) {
+                Cell cell = boardCell.get(xClick/cellSize,yClick/cellSize);
+                boardCell.changeCellState(xClick/cellSize,yClick/cellSize,1,color);
+                g2d.fillRect(cell.getxCord(),cell.getyCord(),cellSize,cellSize);
+            }
+
+        }
+    };
 
     public DrawController(int width, int height) {
         this.drawPanel = new DrawPanel();
+        this.g2d = (Graphics2D) drawPanel.getGraphics();
         this.drawPanelWidth = width;
         this.drawPanelHeight = height;
         setDrawPanel();
@@ -29,80 +52,98 @@ public class DrawController {
         drawPanel.setBackground(new Color(230,230,230));
         drawPanel.setPreferredSize(new Dimension(drawPanelWidth, drawPanelHeight));
         drawPanel.setLayout(new FlowLayout(FlowLayout.LEFT,0,0));
-        drawPanel.setCellSize(size);
     }
 
-    public void generate(int height, int width) {
-        if(drawPanelWidth > drawPanelHeight) {
-            this.size = (drawPanelWidth/width);
-        } else {
-            this.size = (drawPanelHeight/height);
-        }
-        board.clear();
-        board = new LinkedList<>();
+    public void generate(int rows, int cols) {
+        this.cellSize = drawPanelWidth / rows;
+        this.rowsSize = rows;
+        this.colsSize = cols;
+        boardCell = new BoardCell(rows, cols, cellSize);
         Graphics2D g2d = (Graphics2D) drawPanel.getGraphics();
-        g2d.clearRect(0,0, drawPanel.getWidth(), drawPanel.getHeight());
-        for(int i = 0; i < height; i++) {
-            board.add(new LinkedList<>());
-            for(int j = 0; j < width; j++) {
-                Rectangle2D rectangle2D = new Rectangle2D.Double(j * size,i * size, size, size);
-                board.get(i).add(rectangle2D);
+        g2d.clearRect(0,0, drawPanelWidth, drawPanelHeight);
+
+        for(int i = 0; i < rows; i++) {
+            for(int j = 0; j < cols; j++) {
                 g2d.setPaint(Color.WHITE);
-                g2d.fill(rectangle2D);
+                Cell cell = boardCell.get(i,j);
+                g2d.fillRect(cell.getxCord(), cell.getyCord(), cellSize, cellSize);
                 g2d.setPaint(Color.BLACK);
-                g2d.draw(rectangle2D);
+                g2d.drawRect(cell.getxCord(), cell.getyCord(), cellSize, cellSize);
             }
         }
 
-        boardCell = new BoardCell(board,size);
-
         switch (menuController.getNucleationType().get()) {
             case 0:
-                drawPanel.drawHomogeneous(menuController.getAmountInHorizontal(),menuController.getAmountInVertical(), board, boardCell);
+                drawHomogeneous(menuController.getAmountInHorizontal(),menuController.getAmountInVertical());
                 break;
             case 1:
-                drawPanel.drawWithRadian(menuController.getAmountGerms(),menuController.getRadius(), board, boardCell);
+                //drawPanel.drawWithRadian(menuController.getAmountGerms(),menuController.getRadius(), board, boardCell);
                 break;
             case 2:
-                drawPanel.drawRandom(menuController.getAmountGerms(), board, boardCell);
+                drawRandom(menuController.getAmountGerms());
                 break;
             case 3:
-                drawPanel.drawCustom(board, boardCell);
+                drawCustom();
                 break;
         }
     }
 
-    public void setCustomNucleationKind(boolean isAllowed) {
-        drawPanel.setCustomAllowed(isAllowed);
-    }
-
-    public void setNeighbourhood(int i) {
-        //boardCell.setNeighbourhood(i);
-    }
-
-    public void setBinaryConditionsKinds(int binaryCondition) {
-        boardCell.setBinaryConditions(binaryCondition);
-    }
-
     public void drawHomogeneous(int rowsAmount, int colsAmount) {
-        drawPanel.drawHomogeneous(rowsAmount, colsAmount, board, boardCell);
+        int distanceX = rowsSize / rowsAmount;
+        int distanceY = colsSize / colsAmount;
+        int x = distanceX/2;
+        int y;
+        Graphics2D g2d = (Graphics2D) drawPanel.getGraphics();
+        for(int i = 0; i < colsAmount; i++) {
+            y = distanceY/2;
+            for (int j = 0; j < rowsAmount; j++) {
+                Color color = changeColor();
+                g2d.setPaint(color);
+                Cell cell = boardCell.get(x,y);
+                boardCell.changeCellState(x,y,1,color);
+                g2d.fillRect(cell.getxCord(), cell.getyCord(), cellSize, cellSize);
+
+                y += distanceY;
+            }
+            x += distanceX;
+        }
+    }
+
+    private void drawCustom() {
+        drawPanel.addMouseListener(mouseListener);
     }
 
     public void drawWithRadius(int amount, int radius) {
-        drawPanel.drawWithRadian(amount, radius, board, boardCell);
-    }
-
-    public void startSimulation() {
-        boardCell.setBinaryConditions(menuController.getBinaryConditionType().get());
-        boardCell.setNeighbourhood(menuController.getNeighbourhoodType().get());
-        getRadian();
-        boardCell.setRadian(radian);
-        boardCell.startSimulation(drawPanel);
-        //drawPanel.deleteEllipses();
+       // drawPanel.drawWithRadian(amount, radius, board, boardCell);
     }
 
     public void drawRandom(int amount) {
-        drawPanel.drawRandom(amount, board, boardCell);
+        int maxWidth = rowsSize - 1;
+        int minWidth = 0;
+        int rangeWidth = maxWidth - minWidth + 1;
+
+        int maxHeight = colsSize - 1;
+        int minHeight = 0;
+        int rangeHeight = maxHeight - minHeight + 1;
+
+        Graphics2D g2d = (Graphics2D) drawPanel.getGraphics();
+        for(int i = 0 ; i < amount; i++) {
+            int x = (int) (Math.random() * rangeHeight) + minHeight;
+            int y = (int) (Math.random() * rangeWidth) + minWidth;
+
+            Color color = changeColor();
+            g2d.setPaint(color);
+            Cell cell = boardCell.get(x,y);
+            boardCell.changeCellState(x,y,1,color);
+            g2d.fillRect(cell.getxCord(), cell.getyCord(), cellSize, cellSize);
+        }
+    }
+
+    public void startSimulation() {
+        drawPanel.removeMouseListener(mouseListener);
+        boardCell.setPeriodical(menuController.getBinaryConditionType().get());
+        boardCell.setNeighbourhood(menuController.getNeighbourhoodType().get());
+        boardCell.startSimulation(drawPanel);
     }
 
     public DrawPanel getDrawPanel() {
@@ -115,5 +156,17 @@ public class DrawController {
 
     public void getRadian() {
         this.radian = menuController.getRadian();
+    }
+
+    private Color changeColor() {
+        int max = 255;
+        int min = 0;
+        int range = max - min + 1;
+
+        int red = (int) (Math.random() * range) + min;
+        int green = (int) (Math.random() * range) + min;
+        int blue = (int) (Math.random() * range) + min;
+        Color color = new Color(red, green, blue);
+        return color;
     }
 }

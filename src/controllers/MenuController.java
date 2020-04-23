@@ -1,9 +1,9 @@
 package controllers;
 
-import gui.DrawPanel;
 import gui.MenuPanel;
 
 import java.awt.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MenuController {
@@ -11,7 +11,7 @@ public class MenuController {
     private int menuPanelWidth;
     private int menuPanelHeight;
     private AtomicInteger nucleationType = new AtomicInteger();
-    private AtomicInteger binaryConditionType = new AtomicInteger();
+    private AtomicBoolean binaryConditionType = new AtomicBoolean();
     private AtomicInteger neighbourhoodType = new AtomicInteger();
     private int radian = 0;
     private int amountInVertical = 0;
@@ -35,33 +35,13 @@ public class MenuController {
 
     private void setActionsMenuPanel() {
         menuPanel.getButtonGenerateBoard().addActionListener(e-> {
-            System.out.println("Generate clicks");
-            int widthSize = Integer.parseInt(menuPanel.getTextFieldWidth().getText());
-            int heightSize = Integer.parseInt(menuPanel.getTextFieldHeight().getText());
-            drawController.generate(widthSize, heightSize);
-            /*switch (nucleationType.get()) {
-                case 0:
-                    int rowsAmount = Integer.parseInt(textFieldAmountHeight.getText());
-                    int colsAmount = Integer.parseInt(textFieldAmountWidth.getText());
-                    drawController.drawHomogeneous(rowsAmount, colsAmount);
-                    break;
-                case 1:
-                    int amount = Integer.parseInt(textFieldAmountGerms.getText());
-                    int radius = Integer.parseInt(textFieldRadius.getText());
-                    drawController.drawWithRadius(amount, radius);
-                    break;
-                case 2:
-                    int amount2 = Integer.parseInt(textFieldAmountGerms.getText());
-                    drawController.drawRandom(amount2);
-                    break;
-            }
-            drawController.setNeighbourhood(neighbourhoodType.get());
-            drawController.setBinaryConditionsKinds(binaryConditionType.get());*/
+            int rows = Integer.parseInt(menuPanel.getTextFieldWidth().getText());
+            int cols = Integer.parseInt(menuPanel.getTextFieldHeight().getText());
+            drawController.generate(rows, cols);
         });
+
         menuPanel.getButtonStartSimulation().addActionListener(e->{
-            System.out.println("Start click");
             drawController.startSimulation();
-            //drawController.setCustomNucleationKind(false);
         });
 
         menuPanel.getComboBoxNucleationKinds().addActionListener(e-> {
@@ -70,38 +50,32 @@ public class MenuController {
                     nucleationType.set(0);
                     amountInHorizontal = Integer.parseInt(menuPanel.getTextFieldAmountWidth().getText());
                     amountInVertical = Integer.parseInt(menuPanel.getTextFieldAmountHeight().getText());
-                    drawController.setCustomNucleationKind(false);
                     break;
                 case 1:
                     nucleationType.set(1);
                     amountGerms = Integer.parseInt(menuPanel.getTextFieldAmountGerms().getText());
                     radius = Integer.parseInt(menuPanel.getTextFieldRadius().getText());
-                    drawController.setCustomNucleationKind(false);
                     break;
                 case 2:
                     nucleationType.set(2);
                     amountGerms = Integer.parseInt(menuPanel.getTextFieldAmountGerms().getText());
-                    drawController.setCustomNucleationKind(false);
                     break;
                 case 3:
                     nucleationType.set(3);
-                    drawController.setCustomNucleationKind(true);
                     break;
             }
         });
 
         menuPanel.getComboBoxBinaryConditionsKinds().addActionListener(e-> {
-            System.out.println("Binary cond clicked");
             if(menuPanel.getComboBoxBinaryConditionsKinds().getSelectedIndex() == 0) {
-                binaryConditionType.set(0);
+                binaryConditionType.set(true);
             }
             else {
-                binaryConditionType.set(1);
+                binaryConditionType.set(false);
             }
         });
 
         menuPanel.getComboBoxNeighbourhood().addActionListener(e-> {
-            System.out.println("Neigh clicked");
             switch (menuPanel.getComboBoxNeighbourhood().getSelectedIndex()) {
                 case 0:
                     neighbourhoodType.set(0);
@@ -131,10 +105,6 @@ public class MenuController {
         return nucleationType;
     }
 
-    public AtomicInteger getBinaryConditionType() {
-        return binaryConditionType;
-    }
-
     public AtomicInteger getNeighbourhoodType() {
         return neighbourhoodType;
     }
@@ -161,5 +131,9 @@ public class MenuController {
 
     public int getRadian() {
         return radian;
+    }
+
+    public AtomicBoolean getBinaryConditionType() {
+        return binaryConditionType;
     }
 }

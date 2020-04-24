@@ -94,18 +94,23 @@ public class DrawController {
         int x = distanceX/2;
         int y;
         Graphics2D g2d = (Graphics2D) drawPanel.getGraphics();
-        for(int i = 0; i < colsAmount; i++) {
+        for(int i = 0; i < rowsAmount; i++) {
             y = distanceY/2;
-            for (int j = 0; j < rowsAmount; j++) {
+            for (int j = 0; j < colsAmount; j++) {
                 Color color = changeColor();
                 g2d.setPaint(color);
                 Cell cell = boardCell.get(x,y);
                 boardCell.changeCellState(x,y,1,color);
                 g2d.fillRect(cell.getxCord(), cell.getyCord(), cellSize, cellSize);
-
                 y += distanceY;
+                if(y > colsSize ) {
+                    break;
+                }
             }
             x += distanceX;
+            if(x > rowsSize) {
+                break;
+            }
         }
     }
 
@@ -125,17 +130,29 @@ public class DrawController {
         int maxHeight = colsSize - 1;
         int minHeight = 0;
         int rangeHeight = maxHeight - minHeight + 1;
-
+        int counter = 0;
         Graphics2D g2d = (Graphics2D) drawPanel.getGraphics();
         for(int i = 0 ; i < amount; i++) {
-            int x = (int) (Math.random() * rangeHeight) + minHeight;
-            int y = (int) (Math.random() * rangeWidth) + minWidth;
+            int x;
+            int y;
+            int tryGetCords = 100;
+            while (tryGetCords > 0) {
+                x = (int) (Math.random() * rangeHeight) + minHeight;
+                y = (int) (Math.random() * rangeWidth) + minWidth;
+                if (!boardCell.get(x, y).getColor().equals(Color.WHITE)) {
+                    tryGetCords--;
+                } else {
+                    counter++;
+                    System.out.println("Wylosowano poprawnie dla: " + counter);
+                    Color color = changeColor();
+                    g2d.setPaint(color);
+                    Cell cell = boardCell.get(x, y);
+                    boardCell.changeCellState(x, y, 1, color);
+                    g2d.fillRect(cell.getxCord(), cell.getyCord(), cellSize, cellSize);
+                    break;
+                }
 
-            Color color = changeColor();
-            g2d.setPaint(color);
-            Cell cell = boardCell.get(x,y);
-            boardCell.changeCellState(x,y,1,color);
-            g2d.fillRect(cell.getxCord(), cell.getyCord(), cellSize, cellSize);
+            }
         }
     }
 

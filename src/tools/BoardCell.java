@@ -211,19 +211,6 @@ public class BoardCell { //tablica komorek wraz z warunkami brzegowymi
     public void startSimulation(DrawPanel drawPanel) {
             boolean isNotAlive = true;
             while(isNotAlive) {
-                //System.out.println("\n\n");
-                for(int i = 1; i < rows - 1; i++ ) {
-                    for(int j = 1; j < cols - 1; j++) {
-                        //System.out.print(mainCells[i][j].getCurrentState() + "\t");
-                        if(mainCells[i][j].getCurrentState() == 0) {
-                            isNotAlive = true;
-                            break;
-                        } else {
-                            isNotAlive = false;
-                        }
-                    }
-                    //System.out.println("\n");
-                }
                 for(int i = 1; i < rows - 1; i++) {
                     for(int j = 1; j < cols - 1; j++) {
                         Cell cellCheck = mainCells[i][j];
@@ -274,6 +261,20 @@ public class BoardCell { //tablica komorek wraz z warunkami brzegowymi
                         e.printStackTrace();
                     }
                 }
+
+            /*    //System.out.println("\n\n");
+                for(int i = 1; i < rows - 1; i++ ) {
+                    for(int j = 1; j < cols - 1; j++) {
+                        //System.out.print(mainCells[i][j].getCurrentState() + "\t");
+                        if(mainCells[i][j].getColor().equals(Color.WHITE) ) {
+                            isNotAlive = true;
+                            break;
+                        } else {
+                            isNotAlive = false;
+                        }
+                    }
+                    //System.out.println("\n");
+                }*/
             }
     }
 

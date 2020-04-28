@@ -19,6 +19,7 @@ public class MenuController {
     private int amountGerms = 0;
     private int radius = 0;
     private DrawController drawController;
+    private boolean isClicked = false;
 
     public MenuController(int width, int height) {
         this.menuPanel = new MenuPanel();
@@ -35,13 +36,22 @@ public class MenuController {
 
     private void setActionsMenuPanel() {
         menuPanel.getButtonGenerateBoard().addActionListener(e-> {
-            int rows = Integer.parseInt(menuPanel.getTextFieldWidth().getText());
-            int cols = Integer.parseInt(menuPanel.getTextFieldHeight().getText());
-            drawController.generate(rows, cols);
+            int width = Integer.parseInt(menuPanel.getTextFieldWidth().getText());
+            int height = Integer.parseInt(menuPanel.getTextFieldHeight().getText());
+            amountInHorizontal = Integer.parseInt(menuPanel.getTextFieldAmountWidth().getText());
+            amountInVertical = Integer.parseInt(menuPanel.getTextFieldAmountHeight().getText());
+            drawController.generate(height, width);
         });
 
         menuPanel.getButtonStartSimulation().addActionListener(e->{
-            drawController.startSimulation();
+            if(!isClicked) {
+                isClicked = true;
+                drawController.startSimulation(isClicked);
+            } else {
+                isClicked = false;
+                drawController.startSimulation(isClicked);
+            }
+
         });
 
         menuPanel.getComboBoxNucleationKinds().addActionListener(e-> {
@@ -54,7 +64,7 @@ public class MenuController {
                 case 1:
                     nucleationType.set(1);
                     amountGerms = Integer.parseInt(menuPanel.getTextFieldAmountGerms().getText());
-                    radius = Integer.parseInt(menuPanel.getTextFieldRadius().getText());
+                    radian = Integer.parseInt(menuPanel.getTextFieldRadius().getText());
                     break;
                 case 2:
                     nucleationType.set(2);
@@ -91,9 +101,23 @@ public class MenuController {
                     break;
                 case 4:
                     neighbourhoodType.set(4);
-                    radian = Integer.parseInt(menuPanel.getTextFieldRadiusNeighbourhood().getText());
+                    radius = Integer.parseInt(menuPanel.getTextFieldRadiusNeighbourhood().getText());
                     break;
             }
+        });
+
+        menuPanel.getButtonStartMonteCarlo().addActionListener(e-> {
+            int iteration = Integer.parseInt(menuPanel.getTextFieldIterationAmount().getText());
+            double kt = Double.parseDouble(menuPanel.getTextFieldKt().getText());
+            drawController.startMonteCarlo(iteration,kt);
+        });
+
+        menuPanel.getButtonEnergy().addActionListener(e-> {
+            drawController.drawEnergy();
+        });
+
+        menuPanel.getButtonCAMethod().addActionListener(e-> {
+            drawController.drawPrevious();
         });
     }
 

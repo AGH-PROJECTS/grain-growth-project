@@ -5,90 +5,143 @@ import gui.DrawPanel;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class BoardCell { //tablica komorek wraz z warunkami brzegowymi
     private Cell[][] mainCells;
     private int cellSize = 0;
-    private int rows = 0;
-    private int cols = 0;
+    private int height = 0;
+    private int width = 0;
     private int neighbourhood = 0;
     private boolean isPeriodical = false;
+    private boolean toExit = false;
+    private boolean isRadius = false;
+    private DrawPanel drawPanel;
+    private int radius = 1;
+    private Thread t = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            while (!toExit) {
+                for (int y = 1; y < height - 1; y++) {
+                    for (int x = 1; x < width - 1; x++) {
+                        Cell cellCheck = mainCells[y][x];
+                        if (cellCheck.getCurrentState() == 0) {
+                            Cell[] neighbours = new Cell[0];
+                            switch (neighbourhood) {
+                                case 0:
+                                    neighbours = getMooreNeighbourhood(cellCheck);
+                                    break;
+                                case 1:
+                                    neighbours = getVonNeumannNeighbourhood(cellCheck);
+                                    break;
+                                case 2:
+                                    neighbours = getHexagonalNeighbourhood(cellCheck);
+                                    break;
+                                case 3:
+                                    neighbours = getPentagonalNeighbourhood(cellCheck);
+                                    break;
+                                case 4:
+                                    neighbours = getRadianNeighbourhood(cellCheck);
+                                    break;
+                            }
+                            Color color = getTheMostFrequentlyColor(neighbours);
+                            cellCheck.setNextColor(color);
+                            cellCheck.setNextState(1);
+                        }
+                    }
+                }
 
-    public BoardCell(int rows, int cols, int cellSize) {
-        this.rows = rows + 2;
-        this.cols = cols + 2;
-        this.mainCells = new Cell[this.rows][this.cols];
+                Graphics2D g2d = (Graphics2D) drawPanel.getGraphics();
+                g2d.clearRect(0, 0, drawPanel.getWidth(), drawPanel.getHeight());
+
+                for (int k = 1; k < height - 1; k++) {
+                    for (int h = 1; h < width - 1; h++) {
+                        Cell cell = get(k, h);
+                        cell.setNewValues();
+
+                        if(!cell.getColor().equals(Color.WHITE)) {
+                            g2d.setPaint(cell.getColor());
+                            g2d.fillRect(cell.getxCord() - cellSize, cell.getyCord() - cellSize, cellSize, cellSize);
+                        }
+
+                    }
+                }
+
+                setBinaryConditions();
+
+                synchronized (this) {
+                    try {
+                        wait(200);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    });
+
+    public BoardCell(int width, int height, int cellSize) {
+        this.height = height + 2;
+        this.width = width + 2;
+        this.mainCells = new Cell[this.height][this.width];
         this.cellSize = cellSize;
         generateCells();
     }
 
     private void generateCells() { //wygenerowanie całej tablicy
-        for(int i = 0; i < rows; i++) {
-            mainCells[i] = new Cell[cols];
-            for (int j = 0; j < cols; j++) {
-                mainCells[i][j] = new Cell(i,j,cellSize, Color.WHITE);
+        for(int y = 0; y < height; y++) {
+            mainCells[y] = new Cell[width];
+            for (int x = 0; x < width; x++) {
+                mainCells[y][x] = new Cell(y,x,cellSize, Color.WHITE);
             }
         }
     }
 
     public void setBinaryConditions() {
-        /*for(int i = 0; i < rows; i++ ) {
-            for(int j = 0; j < cols; j++) {
-                System.out.print(mainCells[i][j].getCurrentState() + "\t");
-            }
-            System.out.println("\n");
-        }*/
         if(isPeriodical) {
-            for (int i = 1; i < cols - 1; i++) {
-                mainCells[0][i].changeState(mainCells[rows - 2][i].getCurrentState(),mainCells[rows - 2][i].getColor());
-                mainCells[rows - 1][i].changeState(mainCells[1][i].getCurrentState(),mainCells[rows - 2][i].getColor());
+            for (int i = 1; i < width - 1; i++) {
+                mainCells[0][i].changeState(mainCells[height - 2][i].getCurrentState(),mainCells[height - 2][i].getColor());
+                mainCells[height - 1][i].changeState(mainCells[1][i].getCurrentState(),mainCells[height - 2][i].getColor());
             }
 
-            for (int i = 1; i < rows - 1; i++) {
-                mainCells[i][0].changeState(mainCells[i][cols - 2].getCurrentState(),mainCells[i][cols - 2].getColor());
-                mainCells[i][cols - 1].changeState(mainCells[i][1].getCurrentState(),mainCells[i][1].getColor());
+            for (int i = 1; i < height - 1; i++) {
+                mainCells[i][0].changeState(mainCells[i][width - 2].getCurrentState(),mainCells[i][width - 2].getColor());
+                mainCells[i][width - 1].changeState(mainCells[i][1].getCurrentState(),mainCells[i][1].getColor());
             }
 
-            mainCells[0][0].changeState(mainCells[rows - 2][cols - 2].getCurrentState(),mainCells[rows - 2][cols - 2].getColor());
+            mainCells[0][0].changeState(mainCells[height - 2][width - 2].getCurrentState(),mainCells[height - 2][width - 2].getColor());
 
-            mainCells[rows - 1][cols - 1].changeState(mainCells[1][1].getCurrentState(),mainCells[1][1].getColor());
+            mainCells[height - 1][width - 1].changeState(mainCells[1][1].getCurrentState(),mainCells[1][1].getColor());
 
-            mainCells[0][cols - 1].changeState(mainCells[rows - 2][1].getCurrentState(),mainCells[rows - 2][1].getColor());
+            mainCells[0][width - 1].changeState(mainCells[height - 2][1].getCurrentState(),mainCells[height - 2][1].getColor());
 
-            mainCells[rows - 1][0].changeState(mainCells[1][cols - 2].getCurrentState(),mainCells[1][cols - 2].getColor());
+            mainCells[height - 1][0].changeState(mainCells[1][width - 2].getCurrentState(),mainCells[1][width - 2].getColor());
         }
 
     }
 
-    public void changeCellState(int i, int j, int state, Color color) { //odwzorowanie tablicy na dana komorki
-        mainCells[i + 1][j + 1].changeState(state,color);
+    public void changeCellState(int y, int x, int state, Color color) { //odwzorowanie tablicy na dana komorki
+        mainCells[y + 1][x + 1].changeState(state,color);
     }
 
-    public Cell get(int x, int y) {
-        return this.mainCells[x][y];
+    public Cell get(int y, int x) {
+        return this.mainCells[y][x];
     }
     
     public void setNeighbourhood(int neighbourhood) {
         this.neighbourhood = neighbourhood;
-    }
-
-    public List<Cell> getAliveCells() {
-        List<Cell> aliveCells = new LinkedList<>();
-        /*Arrays.stream(cells).forEach(cells1 -> {
-            Arrays.stream(cells1).forEach(cell -> {
-                if(cell.getCurrentState() == 1) {
-                    aliveCells.add(cell);
-                }
-            });
-        });*/
-        return aliveCells;
+        if(neighbourhood == 4) {
+            isRadius = true;
+        }else {
+            isRadius = false;
+        }
     }
 
     private Cell[] getMooreNeighbourhood(Cell cell) {
         Cell[]  neighboursTab = new Cell[8];
 
-        int i = cell.getIndexX();
-        int j = cell.getIndexY();
+        int i = cell.getIndexY();
+        int j = cell.getIndexX();
 
         neighboursTab[0] = mainCells[i - 1][j - 1];
         neighboursTab[1] = mainCells[i - 1][j];
@@ -104,8 +157,8 @@ public class BoardCell { //tablica komorek wraz z warunkami brzegowymi
 
     private Cell[] getVonNeumannNeighbourhood(Cell cell) {
         Cell[]  neighboursTab = new Cell[4];
-        int i = cell.getIndexX();
-        int j = cell.getIndexY();
+        int i = cell.getIndexY();
+        int j = cell.getIndexX();
         neighboursTab[0] = mainCells[i - 1][j];
         neighboursTab[1] = mainCells[i + 1][j];
         neighboursTab[2] = mainCells[i][j + 1];
@@ -115,8 +168,8 @@ public class BoardCell { //tablica komorek wraz z warunkami brzegowymi
 
     private Cell[] getPentagonalNeighbourhood(Cell cell) {
         Cell[]  neighboursTab = new Cell[5];
-        int i = cell.getIndexX();
-        int j = cell.getIndexY();
+        int i = cell.getIndexY();
+        int j = cell.getIndexX();
 
         int max = 4;
         int min = 1;
@@ -158,8 +211,8 @@ public class BoardCell { //tablica komorek wraz z warunkami brzegowymi
 
     private Cell[] getHexagonalNeighbourhood(Cell cell) {
         Cell[]  neighboursTab = new Cell[6];
-        int i = cell.getIndexX();
-        int j = cell.getIndexY();
+        int i = cell.getIndexY();
+        int j = cell.getIndexX();
 
         int max = 2;
         int min = 1;
@@ -189,93 +242,64 @@ public class BoardCell { //tablica komorek wraz z warunkami brzegowymi
     }
 
     private Cell[] getRadianNeighbourhood(Cell cell) {
-      /*  Ellipse2D r = new Ellipse2D.Double(cell.getCenterX() - radian/2, cell.getCenterY() - radian/2,radian,radian);
-        List<Cell> whiteCells = new LinkedList<>();
+        List<Cell> neighboursList = new ArrayList<>();
+        int maxWidth = width - 2;
+        int maxHeight = height - 2;
+        int x = cell.getIndexX();
+        int y = cell.getIndexY();
+        int Y = cell.getCenterY();
+        int X = cell.getCenterX();
+        int YNext, XNext;
+        for (int i = y - radius; i <= y + radius; i++)
+        {
+            if (i < 0)
+            {
+                YNext = i % maxHeight + maxHeight;
+            }
+            else
+            {
+                YNext = i % maxHeight;
+            }
 
-        *//*aliveCells.forEach(c -> {
-            *//**//*g2d.setPaint(Color.black);
-            g2d.fillRect(cell.getCenterX() - 1,cell.getCenterY() - 1,3,3);*//**//*
-            if(c.getColor().equals(Color.WHITE)) {
-                if (r.contains(c.getCenterX(), c.getCenterY())) {
-                    whiteCells.add(cell);
+            for (int j = x - radius; j <= x + radius; j++)
+            {
+                if (j < 0)
+                {
+                    XNext = j % maxWidth + maxWidth;
                 }
-            }*//*
+                else
+                {
+                    XNext = j % maxWidth;
+                }
+                if (!isPeriodical)
+                {
+                    if (Math.pow(get(YNext, XNext).getCenterX() - X, 2) + Math.pow(get(YNext, XNext).getCenterY() - Y, 2) <= Math.pow(radius * cellSize, 2) && get(YNext, XNext).getCurrentState() != 0)
+                    {
+                       neighboursList.add(get(YNext, XNext));
+                    }
+                }
+                else
+                {
+                    if (Math.pow(j * cellSize + (get(YNext, XNext).getCenterX() % cellSize) - X, 2) + Math.pow(i * cellSize + (get(YNext, XNext).getCenterY() % cellSize) - Y, 2) <= Math.pow(radius * cellSize, 2) && get(YNext, XNext).getCurrentState() != 0)
+                    {
+                        neighboursList.add(get(YNext, XNext));
+                    }
+                }
 
-        });
-        Cell[] cells = new Cell[whiteCells.size()];
-        whiteCells.toArray(cells);
-        return cells;*/
-        return null;
+            }
+        }
+        Cell[] cells = new Cell[neighboursList.size()];
+        return neighboursList.toArray(cells);
     }
 
-    public void startSimulation(DrawPanel drawPanel) {
-            boolean isNotAlive = true;
-            while(isNotAlive) {
-                for(int i = 1; i < rows - 1; i++) {
-                    for(int j = 1; j < cols - 1; j++) {
-                        Cell cellCheck = mainCells[i][j];
-                        if(cellCheck.getCurrentState() == 0) {
-                            Cell[] neighbours = new Cell[0];
-                            switch (neighbourhood) {
-                                case 0:
-                                    neighbours = getMooreNeighbourhood(cellCheck);
-                                    break;
-                                case 1:
-                                    neighbours = getVonNeumannNeighbourhood(cellCheck);
-                                    break;
-                                case 2:
-                                    neighbours = getHexagonalNeighbourhood(cellCheck);
-                                    break;
-                                case 3:
-                                    neighbours = getPentagonalNeighbourhood(cellCheck);
-                                    break;
-                                case 4:
-                                    neighbours = getRadianNeighbourhood(cellCheck);
-                                    break;
-                            }
-                            Color color = getTheMostFrequentlyColor(neighbours);
-                            cellCheck.setNextColor(color);
-                            cellCheck.setNextState(1);
-                        }
-                    }
-                }
+    public void startSimulation(DrawPanel drawPanel, boolean toExit) {
+        this.drawPanel = drawPanel;
+        if(toExit) {
+            t.start();
+        } else {
+            this.toExit = true;
+        }
 
-                Graphics2D g2d = (Graphics2D) drawPanel.getGraphics();
-                g2d.clearRect(0,0,drawPanel.getWidth(),drawPanel.getHeight());
-
-                for(int k = 1; k < rows - 1; k++) {
-                    for(int h = 1; h < cols - 1; h++) {
-                        Cell cell = mainCells[k][h];
-                        cell.setNewValues();
-                        g2d.setPaint(cell.getColor());
-                        g2d.fillRect(cell.getxCord() - cellSize, cell.getyCord() - cellSize, cellSize, cellSize);
-                    }
-                }
-
-                setBinaryConditions();
-
-                synchronized (this) {
-                    try {
-                        wait(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-            /*    //System.out.println("\n\n");
-                for(int i = 1; i < rows - 1; i++ ) {
-                    for(int j = 1; j < cols - 1; j++) {
-                        //System.out.print(mainCells[i][j].getCurrentState() + "\t");
-                        if(mainCells[i][j].getColor().equals(Color.WHITE) ) {
-                            isNotAlive = true;
-                            break;
-                        } else {
-                            isNotAlive = false;
-                        }
-                    }
-                    //System.out.println("\n");
-                }*/
-            }
     }
 
     private Color getTheMostFrequentlyColor(Cell[] tabCell) {
@@ -295,24 +319,95 @@ public class BoardCell { //tablica komorek wraz z warunkami brzegowymi
 
         List<Map.Entry<Color,Integer>> list = new LinkedList<>(colorsMap.entrySet());
 
-        list.sort(Map.Entry.comparingByValue());
-        Collections.reverse(list);
         if(list.size() > 0) {
+            list.sort(Map.Entry.comparingByValue());
+            Collections.reverse(list);
+            int amount = list.stream().findFirst().get().getValue();
+            list = list.stream().filter(w -> w.getValue() == amount).collect(Collectors.toList());
+            Collections.shuffle(list);
             color = list.stream().findFirst().get().getKey();
         }
+        Collections.shuffle(list);
 
         return color;
     }
 
-    public void setRadian(int radian) {
-        //this.radian = radian;
-    }
-
-    public void setCell(int i, int j, int cellSize, Color white) {
-        mainCells[i][j] = new Cell(i,j,cellSize, Color.WHITE);
-    }
-
     public void setPeriodical(boolean periodical) {
         isPeriodical = periodical;
+    }
+
+    public void setEnergy(List<Cell> cellList, double kt) {
+        Graphics2D g2d = (Graphics2D) drawPanel.getGraphics();
+        cellList.forEach(cell-> {
+            List<Cell> neighbours = new ArrayList<>();
+            switch (neighbourhood) {
+                case 0:
+                    neighbours = Arrays.asList(getMooreNeighbourhood(cell));
+                    break;
+                case 1:
+                    neighbours = Arrays.asList(getVonNeumannNeighbourhood(cell));
+                    break;
+                case 2:
+                    neighbours = Arrays.asList(getHexagonalNeighbourhood(cell));
+                    break;
+                case 3:
+                    neighbours = Arrays.asList(getPentagonalNeighbourhood(cell));
+                    break;
+                case 4:
+                    neighbours = Arrays.asList(getRadianNeighbourhood(cell));
+                    break;
+            }
+            getEnergy(neighbours,cell,kt);
+            if(!cell.getColor().equals(Color.WHITE)) {
+                if(!cell.getColor().equals(cell.getNextColor())) {
+                    cell.setNewValues();
+                    g2d.setPaint(cell.getColor());
+                    g2d.fillRect(cell.getxCord() - cellSize, cell.getyCord() - cellSize, cellSize, cellSize);
+                }
+
+            }
+        });
+
+        setBinaryConditions();
+    }
+
+    private void getEnergy(List<Cell> neighbours, Cell cellCheck, double kt) {
+        List<Cell> cells = neighbours.stream()
+                .filter(cell -> !cell.getColor().equals(Color.WHITE)).collect(Collectors.toList());
+
+        long energy = cells
+                .stream()
+                .filter(cell -> !cell.getColor().equals(cellCheck.getColor()))
+                .count();
+
+        int randomNeighbour = (int) (Math.random() * (double) (neighbours.size() - 1));
+
+        Cell cellNeighbour = neighbours.get(randomNeighbour);
+
+        long hipoteticEnergy = cells
+                .stream()
+                .filter(cell -> !cell.getColor().equals(cellNeighbour.getColor()))
+                .count();
+
+        int deltaEnergy = (int) (hipoteticEnergy - energy);
+
+        if(getProbability(deltaEnergy,kt) > Math.random()) {
+            cellCheck.setNextColor(cellNeighbour.getColor());
+            cellCheck.setNextState(cellNeighbour.getCurrentState());
+            cellCheck.setCurrentEnergy((int)energy, isRadius);
+        }
+
+    }
+
+    private double getProbability(int deltaEnergy, double kt) {
+        if(deltaEnergy <= 0 ){
+            return 1;
+        } else {
+            return Math.exp(-deltaEnergy/kt);
+        }
+    }
+
+    public void setRadius(int radius) {
+        this.radius = radius;
     }
 }

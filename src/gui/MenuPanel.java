@@ -30,15 +30,27 @@ public class MenuPanel extends JPanel {
     private JLabel labelAmountGerms = new JLabel("Podaj ilość zarodków:");
     private JTextField textFieldAmountGerms = new JTextField("10");
 
-    private JLabel labelRadius = new JLabel("Podaj promień do generowania zarodków:");
+    private JLabel labelRadius = new JLabel("Promień zarodków:");
     private JTextField textFieldRadius = new JTextField("100");
 
-    private JLabel labelRadiusNeighbourhood = new JLabel("Podaj promień do sasiedztwa:");
+    private JLabel labelRadiusNeighbourhood = new JLabel("Promień do sasiedztwa:");
     private JTextField textFieldRadiusNeighbourhood = new JTextField("100");
 
     private JButton buttonGenerateBoard = new JButton("Generuj");
 
     private JButton buttonStartSimulation = new JButton("Start");
+
+    private JButton buttonStartMonteCarlo = new JButton("MC");
+
+    private JLabel labelIterationAmount = new JLabel("Liczba iteracji");
+    private JTextField textFieldIterationAmount = new JTextField("100");
+
+    private JLabel labelKt = new JLabel("Stała Kt:");
+    private JTextField textFieldKt = new JTextField("3");
+
+    private JButton buttonEnergy = new JButton("Energia");
+
+    private JButton buttonCAMethod = new JButton("CA");
 
     public MenuPanel() {
         init();
@@ -57,6 +69,12 @@ public class MenuPanel extends JPanel {
         textFieldAmountGerms.setPreferredSize(mainDimension);
         textFieldRadius.setPreferredSize(mainDimension);
         textFieldRadiusNeighbourhood.setPreferredSize(mainDimension);
+        buttonStartMonteCarlo.setPreferredSize(mainDimension);
+        buttonEnergy.setPreferredSize(mainDimension);
+        buttonCAMethod.setPreferredSize(mainDimension);
+        textFieldIterationAmount.setPreferredSize(mainDimension);
+        labelKt.setPreferredSize(mainDimension);
+        textFieldKt.setPreferredSize(mainDimension);
 
         add(comboBoxNucleationKinds);
         add(comboBoxBinaryConditionsKinds);
@@ -77,6 +95,13 @@ public class MenuPanel extends JPanel {
         add(textFieldRadiusNeighbourhood);
         add(buttonGenerateBoard);
         add(buttonStartSimulation);
+        add(buttonStartMonteCarlo);
+        add(labelIterationAmount);
+        add(textFieldIterationAmount);
+        add(labelKt);
+        add(textFieldKt);
+        add(buttonEnergy);
+        add(buttonCAMethod);
     }
 
     public JComboBox getComboBoxNucleationKinds() {
@@ -125,5 +150,25 @@ public class MenuPanel extends JPanel {
 
     public JTextField getTextFieldRadiusNeighbourhood() {
         return textFieldRadiusNeighbourhood;
+    }
+
+    public JButton getButtonStartMonteCarlo() {
+        return buttonStartMonteCarlo;
+    }
+
+    public JButton getButtonEnergy() {
+        return buttonEnergy;
+    }
+
+    public JButton getButtonCAMethod() {
+        return buttonCAMethod;
+    }
+
+    public JTextField getTextFieldIterationAmount() {
+        return textFieldIterationAmount;
+    }
+
+    public JTextField getTextFieldKt() {
+        return textFieldKt;
     }
 }

@@ -93,10 +93,10 @@ public class Cell {
     private void setEnergyColor(int energy, boolean isRadius) {
         if(isRadius) {
                 if(energy < 256) {
-                    energyColor = new Color(0,energy,255);
+                    energyColor = new Color(0,255,energy);
                 }
                 else if(energy >= 256 && energy < 512) {
-                    energyColor = new Color(0,255,(255 - energy % 256));
+                    energyColor = new Color(0,(255 - energy % 256),255);
                 }
                 else if(energy >= 512 && energy < 768) {
                     energyColor = new Color(energy % 256,255,0);
